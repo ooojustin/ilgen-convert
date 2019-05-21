@@ -87,6 +87,9 @@ namespace ilgen_convert {
 
                     Instruction target = instruction.Operand as Instruction;
 
+                    if (Branches.ContainsKey(target))
+                        continue;
+
                     VariableDefinition label = new VariableDefinition(TypeReferences["Label"]);
                     processor.Body.Variables.Add(label);
 
