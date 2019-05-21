@@ -2,19 +2,19 @@
 
 Convert .NET assembly code to dynamically invoked methods.
 
-## Notes
+## notes
 
 * This project is in an early development phase.
 * Eventually, IL Emissions should be generated from encrypted string on runtime.
 
-## Authors
+## authors
 
 * **Justin Garofolo** - *Initial work* - [ooojustin](https://github.com/ooojustin)
 
-## Libraries
+## libraries used
 
-* **Mono.Cecil** - *Inspection/modification of .NET assemblies.* - [website](https://github.com/jbevain/cecil)
+* **Mono.Cecil** - *Inspection/modification of .NET assemblies.* - [github](https://github.com/jbevain/cecil)
 
-## License
+## licensing
 
 This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.
