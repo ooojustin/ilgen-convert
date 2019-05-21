@@ -15,9 +15,6 @@ namespace ilgen_convert {
         public static Dictionary<string, MethodReference> MethodReferences = new Dictionary<string, MethodReference>();
         public static Dictionary<string, TypeReference> TypeReferences = new Dictionary<string, TypeReference>();
 
-        public static Dictionary<Instruction, VariableDefinition> Branches = new Dictionary<Instruction, VariableDefinition>();
-        public static Dictionary<int, VariableDefinition> Locals = new Dictionary<int, VariableDefinition>();
-
         static void Main(string[] args) {
 
             string assembly = "test.exe";
@@ -70,6 +67,9 @@ namespace ilgen_convert {
 
             MethodBody body = new MethodBody(method);
             ILProcessor processor = body.GetILProcessor();
+
+            Dictionary<Instruction, VariableDefinition> Branches = new Dictionary<Instruction, VariableDefinition>();
+            Dictionary<int, VariableDefinition> Locals = new Dictionary<int, VariableDefinition>();
 
             // create an instance of DynamicMethod
             processor.CreateDynamicMethod("", method.ReturnType, method.Parameters);
