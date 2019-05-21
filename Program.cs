@@ -78,6 +78,7 @@ namespace ilgen_convert {
             // pre-emission phase (runs after DynamicMethod and ILGenerator are instantiated)
             foreach (Instruction instruction in method.Body.Instructions) {
 
+                // output instructions & operand types to console
                 Console.Write(instruction.Offset + ": " + instruction.OpCode.Name);
                 Console.Write(instruction.Operand == null ? "\n" : "        -> " + instruction.Operand.GetType() + "\n");
 
@@ -97,27 +98,22 @@ namespace ilgen_convert {
 
                 }
 
-                // define local variables ('LocalBuilder' objects)
-                int stlocIndex = instruction.GetStlocIndex();
-                if (stlocIndex > -1) {
+            }
 
-                    if (Locals.ContainsKey(stlocIndex))
-                        continue;
+            // define local variables
+            for (int vI = 0; vI < method.Body.Variables.Count; vI++) {
 
-                    VariableDefinition local = new VariableDefinition(TypeReferences["LocalBuilder"]);
-                    processor.Body.Variables.Add(local);
+                VariableDefinition local = new VariableDefinition(TypeReferences["LocalBuilder"]);
+                processor.Body.Variables.Add(local);
 
-                    TypeReference variableType = method.Body.Variables[stlocIndex].VariableType;
+                TypeReference variableType = method.Body.Variables[vI].VariableType;
 
-                    processor.Emit(OpCodes.Dup);
-                    processor.EmitType(variableType);
-                    processor.Emit(OpCodes.Callvirt, MethodReferences["DeclareLocal"]);
-                    processor.Emit(OpCodes.Stloc, local);
+                processor.Emit(OpCodes.Dup);
+                processor.EmitType(variableType);
+                processor.Emit(OpCodes.Callvirt, MethodReferences["DeclareLocal"]);
+                processor.Emit(OpCodes.Stloc, local);
 
-                    Locals.Add(stlocIndex, local);
-
-                }
-
+                Locals.Add(vI, local);
 
             }
 
@@ -138,16 +134,25 @@ namespace ilgen_convert {
                 if (iI != method.Body.Instructions.Count - 1)
                     processor.Emit(OpCodes.Dup);
 
+                // determine index of stloc/ldloc call based on OpCode
                 int stlocIndex = instruction.GetStlocIndex();
                 int ldlocIndex = instruction.GetLdlocIndex();
+
+                // modify stloc/ldloc implementation to use LocalBuilder
                 if (stlocIndex > -1 || ldlocIndex > -1) {
+
+                    // new determine new OpCode & local variable index
                     bool isStloc = stlocIndex > -1;
                     instruction.OpCode = isStloc ? OpCodes.Stloc : OpCodes.Ldloc;
                     int localIndex = isStloc ? stlocIndex : ldlocIndex;
+
+                    // load OpCode (param #1) and LocalBuilder object (param #2) onto eval stack
+                    // make ILGenerator.Emit call with these 2 params to fix local variables in ILGenerator methods
                     processor.Emit(OpCodes.Ldsfld, Utils.GetReflectedOpCode(instruction));
                     processor.Emit(OpCodes.Ldloc, Locals[localIndex]);
                     processor.Emit(OpCodes.Callvirt, Utils.GetILGeneratorEmitter(typeof(System.Reflection.Emit.LocalBuilder)));
                     continue;
+
                 }
 
                 // load the OpCode to be emitted onto the eval stack (param #1)
