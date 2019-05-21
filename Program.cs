@@ -40,7 +40,7 @@ namespace ilgen_convert {
 
                 foreach (MethodDefinition method in type.Methods) {
 
-                    if (method.Name == ".ctor" || method.Name == ".cctor")
+                    if (method.Name == ".ctor" || method.Name == ".cctor" || !method.HasBody)
                         continue;
 
                     Console.WriteLine(" ===== " + method.FullName + " ===== ");
@@ -61,9 +61,6 @@ namespace ilgen_convert {
         }
 
         private static MethodBody GenerateBody(MethodDefinition method) {
-
-            if (method.Body == null)
-                return null;
 
             MethodBody body = new MethodBody(method);
             ILProcessor processor = body.GetILProcessor();
