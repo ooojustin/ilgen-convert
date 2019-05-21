@@ -1,4 +1,4 @@
-# HF-Sharp
+# ilgen-convert
 
 Convert .NET assembly code to dynamically invoked methods.
 
