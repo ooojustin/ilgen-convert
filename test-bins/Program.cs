@@ -10,29 +10,40 @@ namespace test_bins {
 
         static void Main(string[] args) {
 
-            int r = add(69, 31);
+            int r = add(69, 31);    // 100
+            r += k;                 // 169
+            r += get200();          // 369
+            r += get50();           // 419
+            r += parse_int("11");   // 430
+
             Console.WriteLine(r);
             Console.ReadKey();
 
         }
 
-        public static int k = 69;
+        public static int parse_int(string input) {
+            try {
+                return Convert.ToInt32(input);
+            } catch (Exception) {
+                return 0;
+            }
+        }
 
-        public static int forget50() {
+        public static int add(int a, int b) {
+            int c = a + b;
+            return c;
+        }
+
+        public static int get50() {
             int s = 0;
             for (int i = 0; i < 5; i++)
                 s += 10;
             return s;
         }
 
-
-        public static int add(int a, int b) {
-            int c = a + b + k + get100() + forget50();
-            return c;
-        }
-
-        private static int get100() {
-            int p = k + 31;
+        public static int k = 69;
+        private static int get200() {
+            int p = add(k, 31);
             return p == 100 ? 200 : 100;
         }
 
