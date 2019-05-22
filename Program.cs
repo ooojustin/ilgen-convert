@@ -39,6 +39,8 @@ namespace ilgen_convert {
             TypeReferences.Add("Type", Module.ImportReference(typeof(Type)));
             TypeReferences.Add("Label", Module.ImportReference(typeof(System.Reflection.Emit.Label)));
             TypeReferences.Add("LocalBuilder", Module.ImportReference(typeof(System.Reflection.Emit.LocalBuilder)));
+            TypeReferences.Add("ILGenerator", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator)));
+
 
             foreach (TypeDefinition type in Module.Types) {
 
@@ -75,9 +77,16 @@ namespace ilgen_convert {
             // create an instance of DynamicMethod
             processor.CreateDynamicMethod("", method.ReturnType, method.Parameters);
 
+            // establish a variable to store ilgenerator
+            VariableDefinition ilgenerator = new VariableDefinition(TypeReferences["ILGenerator"]);
+            processor.Body.Variables.Add(ilgenerator);
+
             // generate an ILGenerator object from the DynamicMethod
             processor.Emit(OpCodes.Dup);
             processor.Emit(OpCodes.Callvirt, MethodReferences["GetILGenerator"]);
+
+            // store ilgenerator object into local variable
+            processor.Emit(OpCodes.Stloc, ilgenerator);
 
             // pre-emission phase (runs after DynamicMethod and ILGenerator are instantiated)
             foreach (Instruction instruction in method.Body.Instructions) {
@@ -97,7 +106,7 @@ namespace ilgen_convert {
                     VariableDefinition label = new VariableDefinition(TypeReferences["Label"]);
                     processor.Body.Variables.Add(label);
 
-                    processor.Emit(OpCodes.Dup);
+                    processor.Emit(OpCodes.Ldloc, ilgenerator);
                     processor.Emit(OpCodes.Callvirt, MethodReferences["DefineLabel"]);
                     processor.Emit(OpCodes.Stloc, label);
 
@@ -115,7 +124,7 @@ namespace ilgen_convert {
 
                 TypeReference variableType = method.Body.Variables[vI].VariableType;
 
-                processor.Emit(OpCodes.Dup);
+                processor.Emit(OpCodes.Ldloc, ilgenerator);
                 processor.EmitType(variableType);
                 processor.Emit(OpCodes.Callvirt, MethodReferences["DeclareLocal"]);
                 processor.Emit(OpCodes.Stloc, local);
@@ -133,13 +142,12 @@ namespace ilgen_convert {
 
                 // mark a label for this instruction, if we have a branch going here
                 if (Branches.ContainsKey(instruction)) {
-                    processor.Emit(OpCodes.Dup);
+                    processor.Emit(OpCodes.Ldloc, ilgenerator);
                     processor.EmitMarkLabel(Branches[instruction]);
                 }
 
-                // if this isn't the last instruction, emit 'dup' so we use the ILGenerator object for our next call
-                if (iI != method.Body.Instructions.Count - 1)
-                    processor.Emit(OpCodes.Dup);
+                // load ilgenerator object into memory to make Emit call from it
+                processor.Emit(OpCodes.Ldloc, ilgenerator);
 
                 // determine index of stloc/ldloc call based on OpCode
                 int stlocIndex = instruction.GetStlocIndex();
