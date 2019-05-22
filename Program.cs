@@ -20,6 +20,10 @@ namespace ilgen_convert {
             string assembly = "test.exe";
             Module = ModuleDefinition.ReadModule(assembly);
 
+            MethodReferences.Add("FinallyBlock", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator).GetMethod("BeginFinallyBlock", new Type[0])));
+            MethodReferences.Add("CatchBlock", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator).GetMethod("BeginCatchBlock", new Type[] { typeof(Type) })));
+            MethodReferences.Add("TryEnd", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator).GetMethod("EndExceptionBlock", new Type[0])));
+            MethodReferences.Add("TryStart", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator).GetMethod("BeginExceptionBlock", new Type[0])));
             MethodReferences.Add("DeclareLocal", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator).GetMethod("DeclareLocal", new Type[] { typeof(Type) })));
             MethodReferences.Add("MarkLabel", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator).GetMethod("MarkLabel", new Type[] { typeof(System.Reflection.Emit.Label) })));
             MethodReferences.Add("DefineLabel", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator).GetMethod("DefineLabel")));
