@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,6 +41,7 @@ namespace ilgen_convert {
             TypeReferences.Add("Label", Module.ImportReference(typeof(System.Reflection.Emit.Label)));
             TypeReferences.Add("LocalBuilder", Module.ImportReference(typeof(System.Reflection.Emit.LocalBuilder)));
             TypeReferences.Add("ILGenerator", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator)));
+            TypeReferences.Add("DynamicMethod", Module.ImportReference(typeof(System.Reflection.Emit.DynamicMethod)));
 
 
             foreach (TypeDefinition type in Module.Types) {
@@ -76,16 +78,15 @@ namespace ilgen_convert {
 
             // create an instance of DynamicMethod
             processor.CreateDynamicMethod("", method.ReturnType, method.Parameters);
-
-            // establish a variable to store ilgenerator
-            VariableDefinition ilgenerator = new VariableDefinition(TypeReferences["ILGenerator"]);
-            processor.Body.Variables.Add(ilgenerator);
+            VariableDefinition dynamicMethod = new VariableDefinition(TypeReferences["DynamicMethod"]);
+            processor.Body.Variables.Add(dynamicMethod);
+            processor.Emit(OpCodes.Stloc, dynamicMethod);
+            processor.Emit(OpCodes.Ldloc, dynamicMethod);
 
             // generate an ILGenerator object from the DynamicMethod
-            processor.Emit(OpCodes.Dup);
+            VariableDefinition ilgenerator = new VariableDefinition(TypeReferences["ILGenerator"]);
+            processor.Body.Variables.Add(ilgenerator);
             processor.Emit(OpCodes.Callvirt, MethodReferences["GetILGenerator"]);
-
-            // store ilgenerator object into local variable
             processor.Emit(OpCodes.Stloc, ilgenerator);
 
             // pre-emission phase (runs after DynamicMethod and ILGenerator are instantiated)
@@ -98,8 +99,11 @@ namespace ilgen_convert {
                 // define branch variables ('Label' objects)
                 if (instruction.Operand is Instruction) {
 
-                    Instruction target = instruction.Operand as Instruction;
+                    // ignore leave.s branching, since it's used for exception handling
+                    if (instruction.OpCode == OpCodes.Leave_S)
+                        continue;
 
+                    Instruction target = instruction.Operand as Instruction;
                     if (Branches.ContainsKey(target))
                         continue;
 
@@ -139,6 +143,34 @@ namespace ilgen_convert {
 
                 // the current instruction
                 Instruction instruction = method.Body.Instructions[iI];
+
+                foreach (ExceptionHandler exH in method.Body.ExceptionHandlers) {
+                    if (exH.TryStart == instruction) {
+                        processor.Emit(OpCodes.Ldloc, ilgenerator);
+                        processor.Emit(OpCodes.Callvirt, MethodReferences["TryStart"]);
+                        processor.Emit(OpCodes.Pop); // pop TryStart return value from eval stack
+                    } else if (exH.HandlerStart == instruction) {
+                        processor.Emit(OpCodes.Ldloc, ilgenerator);
+                        if (exH.HandlerType == ExceptionHandlerType.Catch) {
+                            processor.EmitType(exH.CatchType);
+                            processor.Emit(OpCodes.Callvirt, MethodReferences["CatchBlock"]);
+                        } else if (exH.HandlerType == ExceptionHandlerType.Finally) {
+                            processor.Emit(OpCodes.Callvirt, MethodReferences["FinallyBlock"]);
+                        }
+                    } else if (exH.TryEnd == instruction || exH.HandlerEnd == instruction) {
+                        processor.Emit(OpCodes.Ldloc, ilgenerator);
+                        processor.Emit(OpCodes.Callvirt, MethodReferences["TryEnd"]);
+                    }
+                }
+
+                // ignore first pop after leave.s call, since this typically deletes the Exception object from the stack
+                if (instruction.OpCode == OpCodes.Pop)
+                    if (instruction.Previous.OpCode == OpCodes.Leave_S)
+                        continue;
+
+                // ignore leave.s branching, since it's used for exception handling
+                if (instruction.OpCode == OpCodes.Leave_S)
+                    continue;
 
                 // mark a label for this instruction, if we have a branch going here
                 if (Branches.ContainsKey(instruction)) {
@@ -220,6 +252,9 @@ namespace ilgen_convert {
                 processor.Emit(OpCodes.Callvirt, Utils.GetILGeneratorEmitter(EmitType));
 
             }
+
+            // load the DynamicMethod object back onto the stack
+            processor.Emit(OpCodes.Ldloc, dynamicMethod);
 
             // object parameter in DynamicMethod.Invoke, should always be null (param #1)
             processor.Emit(OpCodes.Ldnull);
