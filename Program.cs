@@ -163,11 +163,6 @@ namespace ilgen_convert {
                     }
                 }
 
-                // ignore first pop after leave.s call, since this typically deletes the Exception object from the stack
-                if (instruction.OpCode == OpCodes.Pop)
-                    if (instruction.Previous.OpCode == OpCodes.Leave_S)
-                        continue;
-
                 // ignore leave.s branching, since it's used for exception handling
                 if (instruction.OpCode == OpCodes.Leave_S)
                     continue;
