@@ -11,17 +11,30 @@ namespace ilgen_convert {
 
     public static class ILGeneration {
 
-        public static void CreateDynamicMethod(this ILProcessor processor, string name, TypeReference returnType, Collection<ParameterDefinition> parameters) {
+        public static void CreateDynamicMethod(this ILProcessor processor, MethodDefinition method) {
 
             // determine the name of dynamic method (param #1)
-            processor.Emit(OpCodes.Ldstr, name);
+            processor.Emit(OpCodes.Ldstr, Guid.NewGuid().ToString());
 
-            // determine the return type of the method (param #2)
-            processor.Emit(OpCodes.Ldtoken, returnType);
-            processor.Emit(OpCodes.Call, Program.MethodReferences["GetTypeFromHandle"]);
+            // determine the method attributes (param #2)
+            // MethodAttributes.FamANDAssem |  MethodAttributes.Family | MethodAttributes.Static;
+            processor.Emit(OpCodes.Ldc_I4, 0x16);
 
-            // create a new array to hold parameter types (param #3)
-            processor.EmitTypeArray(parameters);
+            // determine the method calling convention (param #3)
+            // CallingConventions.Standard
+            processor.Emit(OpCodes.Ldc_I4_1);
+
+            // determine the return type of the method (param #4)
+            processor.EmitType(method.ReturnType);
+
+            // create a new array to hold parameter types (param #5)
+            processor.EmitTypeArray(method.Parameters);
+
+            // determine the type of the method owner (param #6)
+            processor.EmitType(method.DeclaringType);
+
+            // determine the skipVisiblity parameter value
+            processor.Emit(OpCodes.Ldc_I4_0);
 
             // create an instance of DynamicMethod with the parameters on the stack (string, Type, Type[])
             processor.Emit(OpCodes.Newobj, Program.MethodReferences["DynamicMethodConstructor"]);

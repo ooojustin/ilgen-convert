@@ -31,7 +31,7 @@ namespace ilgen_convert {
             MethodReferences.Add("GetMethodInfo", Module.ImportReference(typeof(Type).GetMethod("GetMethod", new Type[] { typeof(string), typeof(System.Reflection.BindingFlags), typeof(System.Reflection.Binder), typeof(Type[]), typeof(System.Reflection.ParameterModifier[]) })));
             MethodReferences.Add("GetMethodInfoTypes", Module.ImportReference(typeof(Type).GetMethod("GetMethod", new Type[] { typeof(string), typeof(Type[]) })));
             MethodReferences.Add("GetTypeFromHandle", Module.ImportReference(typeof(System.Type).GetMethod("GetTypeFromHandle")));
-            MethodReferences.Add("DynamicMethodConstructor", Module.ImportReference(typeof(System.Reflection.Emit.DynamicMethod).GetConstructor(new Type[] { typeof(string), typeof(Type), typeof(Type[]) })));
+            MethodReferences.Add("DynamicMethodConstructor", Module.ImportReference(typeof(System.Reflection.Emit.DynamicMethod).GetConstructor(new Type[] { typeof(string), typeof(System.Reflection.MethodAttributes), typeof(System.Reflection.CallingConventions), typeof(Type), typeof(Type[]), typeof(Type), typeof(bool)  })));
             MethodReferences.Add("GetILGenerator", Module.ImportReference(typeof(System.Reflection.Emit.DynamicMethod).GetMethod("GetILGenerator", new Type[] { })));
             MethodReferences.Add("GetFieldInfo", Module.ImportReference(typeof(Type).GetMethod("GetField", new Type[] { typeof(string), typeof(System.Reflection.BindingFlags) })));
             MethodReferences.Add("GetConstructorInfoTypes", Module.ImportReference(typeof(Type).GetMethod("GetConstructor", new Type[] { typeof(Type[]) })));
@@ -77,7 +77,7 @@ namespace ilgen_convert {
             Dictionary<int, VariableDefinition> Locals = new Dictionary<int, VariableDefinition>();
 
             // create an instance of DynamicMethod
-            processor.CreateDynamicMethod("", method.ReturnType, method.Parameters);
+            processor.CreateDynamicMethod(method);
             VariableDefinition dynamicMethod = new VariableDefinition(TypeReferences["DynamicMethod"]);
             processor.Body.Variables.Add(dynamicMethod);
             processor.Emit(OpCodes.Stloc, dynamicMethod);
