@@ -36,6 +36,7 @@ namespace ilgen_convert {
             MethodReferences.Add("GetFieldInfo", Module.ImportReference(typeof(Type).GetMethod("GetField", new Type[] { typeof(string), typeof(System.Reflection.BindingFlags) })));
             MethodReferences.Add("GetConstructorInfoTypes", Module.ImportReference(typeof(Type).GetMethod("GetConstructor", new Type[] { typeof(Type[]) })));
             MethodReferences.Add("Invoker", Module.ImportReference(typeof(System.Reflection.MethodBase).GetMethod("Invoke", new Type[] { typeof(object), typeof(object[]) })));
+            MethodReferences.Add("EmitCall", Module.ImportReference(typeof(System.Reflection.Emit.ILGenerator).GetMethod("EmitCall", new Type[] { typeof(System.Reflection.Emit.OpCode), typeof(System.Reflection.MethodInfo), typeof(Type[]) })));
 
             TypeReferences.Add("Type", Module.ImportReference(typeof(Type)));
             TypeReferences.Add("Label", Module.ImportReference(typeof(System.Reflection.Emit.Label)));
@@ -248,6 +249,14 @@ namespace ilgen_convert {
                         Console.WriteLine("UNHANDLED OPERAND: opcode = " + instruction.OpCode.Name + ", type = " + instruction.Operand.GetType());
                     }
 
+                }
+
+                // if we're emitting a 'call' or 'callvirt' opcode, use the ILGenerator.EmitCall function
+                if (instruction.OpCode == OpCodes.Call || instruction.OpCode == OpCodes.Callvirt) {
+                    // null = 3rd param in EmitCall (1st was the opcode, 2nd was the MethodInfo)
+                    processor.Emit(OpCodes.Ldnull);
+                    processor.Emit(OpCodes.Callvirt, MethodReferences["EmitCall"]);
+                    continue;
                 }
 
                 // call the ILGenerator.Emit func
