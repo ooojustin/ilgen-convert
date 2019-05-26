@@ -53,6 +53,8 @@ namespace ilgen_convert {
 
                 processor.Emit(OpCodes.Callvirt, Program.MethodReferences["GetConstructorInfoTypes"]);
 
+                return;
+
             }
 
             // make sure the method is public
@@ -82,6 +84,16 @@ namespace ilgen_convert {
         public static void EmitMethodGetter(this ILProcessor processor, MethodReference method) {
 
             processor.EmitType(method.DeclaringType);
+
+            if (method.Name == ".ctor") {
+
+                processor.EmitTypeArray(method.Parameters);
+
+                processor.Emit(OpCodes.Call, Program.MethodReferences["GetConstructorInfoTypes"]);
+
+                return;
+
+            }
 
             processor.Emit(OpCodes.Ldstr, method.Name);
 
