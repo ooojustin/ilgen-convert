@@ -237,6 +237,10 @@ namespace ilgen_convert {
                         int value = Convert.ToInt32(instruction.Operand);
                         processor.Emit(OpCodes.Ldc_I4, value);
                         EmitType = typeof(int);
+                    } else if (instruction.Operand.GetType() == typeof(float)) {
+                        float value = Convert.ToSingle(instruction.Operand);
+                        processor.Emit(OpCodes.Ldc_R4, value);
+                        EmitType = typeof(float);
                     } else if (instruction.Operand is Instruction) {
                         Instruction targetInstruction = instruction.Operand as Instruction;
                         processor.Emit(OpCodes.Ldloc, Branches[targetInstruction]);
