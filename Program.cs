@@ -245,6 +245,10 @@ namespace ilgen_convert {
                         Instruction targetInstruction = instruction.Operand as Instruction;
                         processor.Emit(OpCodes.Ldloc, Branches[targetInstruction]);
                         EmitType = typeof(System.Reflection.Emit.Label);
+                    } else if (instruction.Operand is TypeReference) {
+                        TypeReference typeReference = instruction.Operand as TypeReference;
+                        processor.EmitType(typeReference);
+                        EmitType = typeof(Type);
                     } else {
                         Console.WriteLine("UNHANDLED OPERAND: opcode = " + instruction.OpCode.Name + ", type = " + instruction.Operand.GetType());
                     }
