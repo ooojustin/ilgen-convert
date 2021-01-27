@@ -2,9 +2,10 @@
 
 Convert .NET assembly code to dynamically invoked methods.
 
+This project was open sourced in January 2021 and is not actively being developed.
+
 ## notes
 
-* This project is in an early development phase.
 * Eventually, IL Emissions should be generated from encrypted string on runtime.
 
 ## authors
