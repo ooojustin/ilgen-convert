@@ -2,7 +2,9 @@
 
 Convert .NET assembly code to dynamically invoked methods.
 
-This project was open sourced in January 2021 and is not actively being developed.
+This project was the first to attempt this approach to binary obfuscation of a managed language: [video demonstration](https://f002.backblazeb2.com/file/justinooo-upload/06-2024/ilgen-demo.mp4)
+
+It was open sourced in January 2021 for further community research and is not actively being developed.
 
 ## notes
 
