@@ -1,8 +1,8 @@
 # ilgen-convert
 
-Convert .NET assembly code to dynamically invoked methods.
+Rewrite .NET method bodies into runtime `DynamicMethod` emitters, preserving the original IL behavior while making executables harder to inspect statically: [video demonstration](https://f002.backblazeb2.com/file/justinooo-upload/06-2024/ilgen-demo.mp4)
 
-This project was open sourced in January 2021 and is not actively being developed.
+It was open sourced in January 2021 for further community research and is not actively being developed.
 
 ## notes
 
